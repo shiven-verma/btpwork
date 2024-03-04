@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 M = 20    # Control Horizon
 P = 20     # Prediction Horizon
 Q = np.array([[1,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]])     # Cost Weight
-Rf = 35   # Reference 
+Rf = 55   # Reference 
 delT = 1  # Discrete Time stamp
 
 
@@ -93,6 +93,7 @@ def circle(a,b,r):
 
     plt.plot(x,y,"--r",xo,yo,"b")
 
+# # Combined Cost Function
 def stolist(N,li1,li2):
     i = 0
     emptli = []
@@ -166,7 +167,13 @@ def cost(xref,u,x0,Us,t=tpredict):
     print(ye.shape)
     #print(cd.sum2(ye[:,0]-xref[:,0]))
     
-    f = cd.sum1(0.002*cd.sum2((xref[:,0]-ye[:,0])**2) + cd.sum2((xref[:,2]-ye[:,2])**2) + cd.sum2((xref[:,3]-ye[:,3])**2)) + cd.sum1(uv) 
+    xpre = ye[:,2]
+    ypre = ye[:,3]
+    r = 1.5
+    a = [10,20,15]
+    b = [0.8,5,2.5]
+    
+    f = cd.sum1(0.002*cd.sum2((xref[:,0]-ye[:,0])**2) + cd.sum2((xref[:,2]-ye[:,2])**2) + cd.sum2((xref[:,3]-ye[:,3])**2)) + cd.sum1(uv) #+ 1.11*cd.sum1(1/((xpre-20)**2*(ypre-2.5)**2)) #
     # print(f.shape," :f")
     #f = 0.002*sum((xref[:,0]-temp1)**2) + sum((xref[:,2]-temp3)**2) + sum((xref[:,3]-temp4)**2)
     lbx = [-0.610]*u.shape[0]
@@ -176,22 +183,24 @@ def cost(xref,u,x0,Us,t=tpredict):
     # cy = np.array([1]*opt_var)
     # r = np.array([0.5]*opt_var)
     #g = [(temp3-10)**2 + (temp4-1)**2]
-    r = 1.5
-    a = 10
-    b = 0.8
-    k = r**2 - a**2 - b**2
-    xpre = ye[:,2]
-    ypre = ye[:,3]
-    g = [xpre**2 + ypre**2 - 2*a*xpre - 2*b*ypre]
+
+    
+    k = [r**2 - a[0]**2 - b[0]**2, r**2 - a[1]**2 - b[1]**2,  r**2 - a[2]**2 - b[2]**2]
+
+    
+    # g = [xpre**2 + ypre**2 - 2*a*xpre - 2*b*ypre,xpre**2]
     # print(g," :g")
-    # g = [0]
-    lbg = [k]
-    ubg = [cd.inf]
-    nlp = {"x":uv,"f":f,"g":xpre**2 + ypre**2 - 2*a*xpre - 2*b*ypre}
+    g = cd.vertcat(xpre**2 + ypre**2 - 2*a[0]*xpre - 2*b[0]*ypre, xpre**2 + ypre**2 - 2*a[1]*xpre - 2*b[1]*ypre, xpre**2 + ypre**2 - 2*a[2]*xpre - 2*b[2]*ypre )
+    lbg = cd.vertcat(np.ones(P)*k[0],np.ones(P)*k[1],np.ones(P)*k[2])
+    # lbg = [k,0.00]
+    ubg = [cd.inf,cd.inf,cd.inf]
+    print()
+    nlp = {"x":uv,"f":f,"g":g}
     solver = cd.nlpsol('solver', 'ipopt', nlp)
-    solved = solver(x0 = u0,lbx = lbx,ubx=ubx,lbg=lbg,ubg=ubg)
+    solved = solver(x0 = u0,lbx = lbx,ubx=ubx,lbg=lbg)
     print(solved['x'],solved['f'],"cost")
     return solved['x']
+
 
 
 def past(ar,n):
@@ -246,11 +255,13 @@ while j<simn:
     if j== simn-1:
         plt.plot(simdict[f"pred_{j}"][3,:],simdict[f"pred_{j}"][2,:], "-o", label = f"iter{j+1}")
     else:
-        # plt.plot(simdict[f"pred_{j}"][3,:][0:2],simdict[f"pred_{j}"][2,:][0:2], "-o", label = f"iter{j+1}")
-        plt.plot(simdict[f"pred_{j}"][3,:], simdict[f"pred_{j}"][2,:], "-o", label = f"iter{j+1}")
+        plt.plot(simdict[f"pred_{j}"][3,:][0:2],simdict[f"pred_{j}"][2,:][0:2], "-o", label = f"iter{j+1}")
+        # plt.plot(simdict[f"pred_{j}"][3,:], simdict[f"pred_{j}"][2,:], "-o", label = f"iter{j+1}")
     j+=1
 
 circle(0.8,10,1.5)
+circle(5,20,1.5)
+circle(2.5,15,1.5)
 ax = plt.gca()
 ax.set_aspect('equal', adjustable='box')
 # plt.legend()
