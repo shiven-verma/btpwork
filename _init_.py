@@ -33,6 +33,9 @@ Xref = cd.SX(np.array([xref,yref,psiref]).T)
 C = controller()
 S = ship()
 
+# Ship takes [x,y,psi,u,v,r,delta]
+# MMG takes [u,v,r,x,y,psi,delta,Np]
+
 pos = []
 
 while i<Rf-10:
