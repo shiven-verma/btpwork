@@ -40,10 +40,9 @@ class ship():
         return stateder
     
     def simulation(self,X0,control,t):
-        # if len(control) == len(t):
-        #     raise TypeError("Dimensions does not match")
-        # h = t[1]-t[0]
-        h = t
+        if len(control) != len(t):
+            raise TypeError("Dimensions does not match")
+        h = t[1]-t[0]
         n = control.shape[0]
         sol = np.zeros([7,n])
         i = 0
@@ -64,31 +63,34 @@ class controller():
         self.C = 1
         self.Q = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
 
-
+        
     def prediction_model(self,states,control_inp,h):
-        x = states[0]
-        y = states[1]
-        psi = states[2]
-        u = states[3]
-        v = states[4]
-        r = states[5]
+        u = states[0]
+        v = states[1]
+        r = states[2]
+        x = states[3]
+        y = states[4]
+        psi = states[5]
         delta = states[6]
 
-        T = 4
-        K = 0.5
-        a = 0.1
+
+
+        T = 140
+        K = 0.056
+        a = 2.78
         b = 0.01
 
         Kp = 0.9
         #input = np.clip(control_inp,-0.610,0.610)
         stder = cd.SX(7,1)
+         # MMG takes [u,v,r,x,y,psi,delta,Np]
 
-        stder[0] = u*cd.cos(psi)
-        stder[1] = u*cd.sin(psi)
-        stder[2] = r
-        stder[3] = 0
-        stder[4] = 0
-        stder[5] = (K*delta + b -a*r**3 - r)/T   # Non-linear
+        stder[0] = 0 
+        stder[1] = 0 
+        stder[2] = (K*delta + b -a*r**3 - r)/T   # Non-linear
+        stder[3] = u*cd.cos(psi) 
+        stder[4] = u*cd.sin(psi) 
+        stder[5] = r  
         stder[6] = Kp*(control_inp-delta)
 
         stnew = stder*h + states
@@ -110,9 +112,9 @@ class controller():
             y = cd.vertcat(y,newstate.T)
             i+=1
         y = y[1:,:]
-        x_pred = y[:,0]
-        y_pred = y[:,1]
-        psi_pred = y[:,2]
+        x_pred = y[:,3]
+        y_pred = y[:,4]
+        psi_pred = y[:,5]
         print("Reference size: ",ref.shape)
         f = cd.sum1(cd.sum2((ref[:,0]-x_pred)**2) + cd.sum2((ref[:,1]-y_pred)**2) + cd.sum2((ref[:,2]-psi_pred))**2)
         return f

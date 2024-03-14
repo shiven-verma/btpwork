@@ -22,6 +22,7 @@ class fsparam():
         self.my = 0.233
         self.Jz = 0.011
         self.Np = 1.77835763
+        self.rdr = 1.76
     
 
 class l7param():
@@ -44,6 +45,7 @@ class l7param():
         self.my = 0.233
         self.Jz = 0.011
         self.Np = 12
+        self.rdr = 10
 
 class l3param():
     def __init__(self):
@@ -64,7 +66,8 @@ class l3param():
         self.mx = 0.022
         self.my = 0.233
         self.Jz = 0.011
-        self.Np = 27
+        self.Np = 17.95
+        self.rdr = 15.6
 
 
 

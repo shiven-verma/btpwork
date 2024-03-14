@@ -9,6 +9,8 @@ from params import fsparam
 p = fsparam()
 c = expCal()
 
+# Np = p.Np
+
 massndm = 0.5*p.rho*p.d*p.Lpp**2 
 Indm = 0.5*p.rho*p.d*p.Lpp**4
 mx = p.mx*massndm
@@ -35,7 +37,7 @@ def _mmgder(t,var,dc):
     r = var[2]                # Yaw rate        
     psi = var[5]              # Yaw Angle
     delta = var[6]            # Rudder Angle 
-    Np = var[7]               # Propeller Speed
+    Np = p.Np               # Propeller Speed
     
     
     Ures = sqrt(u**2 + v**2)     # Resulatant Velocity
@@ -126,10 +128,11 @@ def _mmgder(t,var,dc):
     y_dot = u*sin(psi)+v*cos(psi)
     psi_dot = r
     delta_dot = np.sign(delta_c-delta)*1.76*pi/180 
+    delta_dot = 0.9*(delta_c-delta)
     
     
     
-    X_dot = np.zeros(8)
+    X_dot = np.zeros(7)
     
     X_dot[0] = vd[0]
     X_dot[1] = vd[1]
@@ -138,9 +141,10 @@ def _mmgder(t,var,dc):
     X_dot[4] = y_dot
     X_dot[5] = psi_dot
     X_dot[6] = delta_dot
-    X_dot[7] = 0
+    # X_dot[7] = 0
     
-    return X_dot
+    h = t[1] - t[0]
+    return X_dot*h + var
 
 
 
