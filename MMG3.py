@@ -102,7 +102,8 @@ def _mmgder(var,dc):
     r = var[2]                # Yaw rate        
     psi = var[5]              # Yaw Angle
     delta = var[6]            # Rudder Angle 
-    Np = var[7]               # Propeller Speed
+    # Np = var[7]               # Propeller Speed
+    Np = Np_d
     
     
     Ures = sqrt(u**2 + v**2)     # Resulatant Velocity
@@ -200,7 +201,7 @@ def _mmgder(var,dc):
     
     
     
-    der = np.zeros(8)
+    der = np.zeros(7)
     
     der[0] = vd[0]
     der[1] = vd[1]
@@ -209,7 +210,7 @@ def _mmgder(var,dc):
     der[4] = y_dot
     der[5] = psi_dot
     der[6] = delta_dot
-    der[7] = 0
+    # der[7] = 0
     
     return der
 
@@ -227,7 +228,7 @@ def _mmgder(var,dc):
 def simulation(X0,control,t):
     h = t[1]-t[0]
     n = control.shape[0]
-    sol = np.zeros([8,n])
+    sol = np.zeros([7,n])
     i = 0
     xinit = X0.copy()
     while i<n:

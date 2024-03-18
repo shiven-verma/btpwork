@@ -8,7 +8,7 @@ from matplotlib.animation import FuncAnimation
 # x_data = np.linspace(1,20,500)
 # y_data = np.abs(40*np.sin(np.exp(-x_data/5)*np.cos(x_data)))
 
-file_path = "/home/shivendra/IITM/BtechProject/Python/mpcdata.csv"
+file_path = "/home/shivendra/IITM/BtechProject/Python/mpcdata1.csv"
 data = np.genfromtxt(file_path, delimiter=',')
 
 x_data = data[1,:]
@@ -18,7 +18,7 @@ obsydata = data[2,:]
 pathx = data[4,:]
 pathy = data[5,:]
 
-radius = 1.5  # Radius of the circle
+radius = 1.7  # Radius of the circle
 
 # Create the figure and axis
 fig, ax = plt.subplots()
@@ -56,8 +56,8 @@ ax.set_ylabel('Y')
 ax.legend(fontsize=5.5,loc="lower right")
 
 # Create the animation
-animation = FuncAnimation(fig, update, frames=len(x_data), interval=100, blit=True)
+animation = FuncAnimation(fig, update, frames=len(x_data), interval=200, blit=True)
 
 # Show the plot
 plt.show()
-# animation.save('obstacle_moving.gif', writer = 'pillow', fps = 10)
+# animation.save('obs_incoming_speed_2.gif', writer = 'pillow', fps = 10)
