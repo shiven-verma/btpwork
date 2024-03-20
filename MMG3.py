@@ -104,6 +104,8 @@ def _mmgder(var,dc):
     delta = var[6]            # Rudder Angle 
     # Np = var[7]               # Propeller Speed
     Np = Np_d
+
+
     
     
     Ures = sqrt(u**2 + v**2)     # Resulatant Velocity
@@ -231,7 +233,7 @@ def simulation(X0,control,t):
     sol = np.zeros([7,n])
     i = 0
     xinit = X0.copy()
-    while i<n:
+    while i<2:
         sol[:,i] = xinit[:]
         xd = _mmgder(xinit,control[i])
         xup = xd*h + xinit

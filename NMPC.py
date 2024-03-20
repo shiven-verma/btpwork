@@ -199,7 +199,7 @@ class ship():
        
 class controller():
     def __init__(self):
-        self.P = 10
+        self.P = 15
         self.C = 1
         self.Q = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
 
@@ -215,10 +215,10 @@ class controller():
 
 
 
-        T = 10
-        K = 0.5
-        a = 2.3
-        b = 0.01
+        T = 1.28
+        K = 0.112
+        a = -28.05
+        b = 0.0015
 
         Kp = 0.9
         stder = cd.SX(7,1)
@@ -254,25 +254,34 @@ class controller():
         x_pred = y[:,3]
         y_pred = y[:,4]
         psi_pred = y[:,5]
-        print("Reference size: ",ref.shape)
-        f = cd.sum1(2.5*cd.sum2((ref[:,0]-x_pred)**2) + 2.5*cd.sum2((ref[:,1]-y_pred)**2) + cd.sum2((ref[:,2]-psi_pred))**2) + cd.sum1(self.control_variable)
+        a = [138]
+        b = [13.5]
+        r = 1.5
+        self.k = [r**2 - a[0]**2 - b[0]**2]
+        # print("Reference size: ",ref.shape)
+        self.g = cd.vertcat(x_pred**2 + y_pred**2 - 2*a[0]*x_pred - 2*b[0]*y_pred)
+
+        f = cd.sum1(2.5*cd.sum2((ref[:,0]-x_pred)**2) + 2.5*cd.sum2((ref[:,1]-y_pred)**2) + cd.sum2((ref[:,2]-psi_pred))**2) + cd.sum1(self.control_variable**2)
         return f
     
 
     def nlpsolve(self,ref,X,t):
         X0 = X.copy()
-        u0 = np.zeros(10)
+        u0 = np.zeros(self.P)
         lbx = [-0.610]*self.P
         ubx = [0.610]*self.P
         P = []
-        g = [0]
-        ubg = [0]
-        lbg = [0]
+
+
         f = self.cost(ref,X0,t)
+        g = self.g
+
+        lbg = cd.vertcat(np.ones(self.P)*self.k[0])
+        ubg = [cd.inf,cd.inf,cd.inf]
 
         nlp = {"x":self.control_variable,"f":f, "g":g}
         solver = cd.nlpsol('solver','ipopt',nlp)
-        solved = solver(x0 = u0,lbx = lbx,ubx=ubx)
+        solved = solver(x0 = u0,lbx = lbx,ubx=ubx,lbg=lbg)
         print(solved['x'])
         return solved['x']
     

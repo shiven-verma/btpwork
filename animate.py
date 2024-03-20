@@ -60,4 +60,4 @@ animation = FuncAnimation(fig, update, frames=len(x_data), interval=200, blit=Tr
 
 # Show the plot
 plt.show()
-# animation.save('obs_incoming_speed_2.gif', writer = 'pillow', fps = 10)
+animation.save('obs_incoming_fail.gif', writer = 'pillow', fps = 10)
