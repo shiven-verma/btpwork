@@ -8,12 +8,13 @@ from scipy.interpolate import CubicSpline
 from MMG3 import simulation
 from NMPC import controller,ship
 from params import fsparam
-from Guide import Guide
+from Guide import Agent
 
 
 p = fsparam()
 Np = p.Np
-G = Guide()
+C = controller()
+S = ship()
 
 def past(ar,n):
     li = []
@@ -21,27 +22,43 @@ def past(ar,n):
     li = [0]*n + li[:-n]
     return np.array(li)
 
-C = controller()
-S = ship()
 
-ReferenceWindow = 80 
+xspl = np.array([0,5,9,17,27,39,53,68,76,88])*2
+yspl = np.array([0,1,1.3,2.7,6,4,5.4,3.0,3.6,4.0])*2
+
+spline = CubicSpline(xspl,yspl,bc_type="clamped")
+
+x_ex = np.linspace(min(xspl),max(xspl),200)
+y_ex = spline(x_ex)
+
+
+x0 = -7
+y0 = -2
+psi0 = 0.0
+
+pathtime = 560
+Ph = 1200
+
+A = Agent([x0,y0,psi0])
+sol = A.simulation(spline,pathtime,xspl,yspl)
+
+
+
+ReferenceWindow = sol[::Ph].shape[0] 
 SimumlationWindow = ReferenceWindow-C.P
 
+xref = sol[:,1][::Ph]
+yref = sol[:,2][::Ph]
+psiref = sol[:,0][::Ph]
 
-xref = np.linspace(0,ReferenceWindow-1,ReferenceWindow)
-yref = (xref/20)**2
-xrefd = xref - past(xref,1)
-yrefd = yref - past(yref,1)
 
-psiref = np.arctan2(yrefd,xrefd)
+# xref = np.linspace(0,ReferenceWindow-1,ReferenceWindow)
+# yref = (xref/20)**2
+# xrefd = xref - past(xref,1)
+# yrefd = yref - past(yref,1)
 
-x = [0,1,7,9,17,29,41,58]
-y = [0,1,1.3,2.7,6,4,5.4,3.0]
+# psiref = np.arctan2(yrefd,xrefd)
 
-spline = CubicSpline(x,y,bc_type="clamped")
-
-x_ex = np.linspace(min(x),max(x),200)
-y_ex = spline(x_ex)
 
 
 
@@ -56,6 +73,10 @@ time = tdiscrete
 # time = cd.SX(np.linspace(0,19,20))
 
 Xref = cd.SX(np.array([xref,yref,psiref]).T)
+print(Xref.shape)
+
+# Xref = cd.vertcat(Xref,cd.SX(np.zeros([1,3])))
+
 
 def circle(a,b,r):
     theta = np.linspace(0,2*np.pi,100)
@@ -68,22 +89,20 @@ def circle(a,b,r):
 
     plt.plot(x,y,"--r",xo,yo,"b")
 
-# Ship takes [x,y,psi,u,v,r,delta]
-# MMG takes [u,v,r,x,y,psi,delta,Np]
 
-pos = []
 
-X0 = [1,0,0,0,0,0,0]
+
+X0 = [1,0,0,x0,y0,psi0,0]
 xini = X0.copy()
 i = 0
 while i<SimumlationWindow:
     # u = np.zeros(10)
     refr = Xref[i:i+C.P,:]
+    # print(refr,"---ref")
     uoptd = C.nlpsolve(refr,xini,time)
     uopt[i,:] = np.array(uoptd)[:,0]
     uoptm = uopt[i,:]
     uoptcont = uoptm[(tcontinuous//1).astype(int)]
-    print(uoptcont)
     y = simulation(xini,uoptcont,tcontinuous)
     # y = simulation(xini,uoptm,time)
     xini[:] = y[:,1*ContMag]
@@ -106,7 +125,8 @@ while i<SimumlationWindow:
 
 
 plt.figure(figsize=(14,10))
-plt.plot(xref,yref,"--",label="reference")
+plt.plot(x_ex,y_ex,"--",label="reference")
+plt.plot(xspl,yspl,'r*',label='waypoints')
 j = 0
 while j<SimumlationWindow:
     if j== SimumlationWindow-1+1:

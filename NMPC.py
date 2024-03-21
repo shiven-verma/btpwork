@@ -149,10 +149,10 @@ from math import sin,cos,sqrt,pi,exp
 
 class ship():
     def __init__(self):
-        self.T = 4 # Time constant
-        self.K = 0.5# rudder constant
-        self.a = 0.1 # nonlinear term
-        self.b = 0.01 # bias term
+        self.T = 16 # Time constant
+        self.K = 0.64# rudder constant
+        self.a = 0.1*0 # nonlinear term
+        self.b = 0.002 # bias term
 
 
     def model(self,state,input):
@@ -187,7 +187,7 @@ class ship():
         sol = np.zeros([7,n])
         i = 0
         xinit = X0.copy()
-        while i<n:
+        while i<2:
             sol[:,i] = xinit[:]
             xd = self.model(xinit,control[i])
             xup = xd*h + xinit
@@ -199,7 +199,7 @@ class ship():
        
 class controller():
     def __init__(self):
-        self.P = 15
+        self.P = 30
         self.C = 1
         self.Q = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
 
@@ -215,10 +215,10 @@ class controller():
 
 
 
-        T = 1.28
-        K = 0.112
-        a = -28.05
-        b = 0.0015
+        T = 8
+        K = 0.064
+        a = -28.05*0
+        b = 0.0022
 
         Kp = 0.9
         stder = cd.SX(7,1)
@@ -258,10 +258,11 @@ class controller():
         b = [13.5]
         r = 1.5
         self.k = [r**2 - a[0]**2 - b[0]**2]
-        # print("Reference size: ",ref.shape)
+        # print("Reference size: ",x_pred)
         self.g = cd.vertcat(x_pred**2 + y_pred**2 - 2*a[0]*x_pred - 2*b[0]*y_pred)
 
-        f = cd.sum1(2.5*cd.sum2((ref[:,0]-x_pred)**2) + 2.5*cd.sum2((ref[:,1]-y_pred)**2) + cd.sum2((ref[:,2]-psi_pred))**2) + cd.sum1(self.control_variable**2)
+
+        f = cd.sum1(2.3*cd.sum2((ref[:,0]-x_pred[0:ref.shape[0]])**2) + 2.3*cd.sum2((ref[:,1]-y_pred[0:ref.shape[0]])**2) + cd.sum2((ref[:,2]-psi_pred[0:ref.shape[0]]))**2) + cd.sum1(self.control_variable**2)
         return f
     
 

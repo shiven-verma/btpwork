@@ -112,6 +112,7 @@ def _mmgder(var,dc):
     beta = -np.arctan(v/u)
     
     U = Ures
+    print(Ures,"U")
     
     delta_c = dc
     delta_c = np.clip(delta_c,mindel,maxdel)             # Rudder Angle Commanded 
@@ -205,7 +206,7 @@ def _mmgder(var,dc):
     
     der = np.zeros(7)
     
-    der[0] = vd[0]
+    der[0] = vd[0]*0
     der[1] = vd[1]
     der[2] = vd[2]
     der[3] = x_dot
