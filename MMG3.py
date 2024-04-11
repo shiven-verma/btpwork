@@ -113,6 +113,8 @@ def _mmgder(var,dc):
     
     U = Ures
     print(Ures,"U")
+    if U>5.1:
+        raise("Velocity Mismatch")
     
     delta_c = dc
     delta_c = np.clip(delta_c,mindel,maxdel)             # Rudder Angle Commanded 
@@ -228,13 +230,16 @@ def _mmgder(var,dc):
 # sol_port = solve_ivp(funcp,tspan,X0,t_eval=t_eval)
 # sol_stbd = solve_ivp(funcs,tspan,X0,t_eval=t_eval)
 
-def simulation(X0,control,t):
+def simulation(X0,control,t,flag):
     h = t[1]-t[0]
-    n = control.shape[0]
-    sol = np.zeros([7,n])
+    n = 2
+    
     i = 0
     xinit = X0.copy()
-    while i<2:
+    if flag:
+        n = control.shape[0]
+    sol = np.zeros([7,n])
+    while i<n:
         sol[:,i] = xinit[:]
         xd = _mmgder(xinit,control[i])
         xup = xd*h + xinit

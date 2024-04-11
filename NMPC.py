@@ -1,4 +1,4 @@
-# #!/usr/bin/env python3
+# !/usr/bin/env python3
 
 # import numpy as np
 # import casadi as cd
@@ -164,7 +164,7 @@ class ship():
         psi = state[5]
         delta = state[6]
 
-        Kp = 0.9
+        Kp = 0.1
         input = np.clip(input,-0.610,0.610)
         stateder = np.zeros(7)
 
@@ -198,10 +198,10 @@ class ship():
 
        
 class controller():
-    def __init__(self):
-        self.P = 30
-        self.C = 1
-        self.Q = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+    def __init__(self,NP,NC,Q):
+        self.P = NP
+        self.C = NC
+        self.Q = Q
 
 
     def prediction_model(self,states,control_inp,h):
@@ -215,9 +215,9 @@ class controller():
 
 
 
-        T = 8
+        T = 14
         K = 0.064
-        a = -28.05*0
+        a = -68.05
         b = 0.0022
 
         Kp = 0.9
@@ -230,7 +230,7 @@ class controller():
         stder[3] = u*cd.cos(psi) 
         stder[4] = u*cd.sin(psi) 
         stder[5] = r  
-        stder[6] = (control_inp-delta)*25.76*pi/180
+        stder[6] = Kp*(control_inp-delta)*25.76*pi/180
 
         stnew = stder*h + states
         #print("stn: ",stnew)
@@ -262,7 +262,7 @@ class controller():
         self.g = cd.vertcat(x_pred**2 + y_pred**2 - 2*a[0]*x_pred - 2*b[0]*y_pred)
 
 
-        f = cd.sum1(2.3*cd.sum2((ref[:,0]-x_pred[0:ref.shape[0]])**2) + 2.3*cd.sum2((ref[:,1]-y_pred[0:ref.shape[0]])**2) + cd.sum2((ref[:,2]-psi_pred[0:ref.shape[0]]))**2) + cd.sum1(self.control_variable**2)
+        f = cd.sum1(5*cd.sum2((ref[:,0]-x_pred[0:ref.shape[0]])**2) + 5*cd.sum2((ref[:,1]-y_pred[0:ref.shape[0]])**2) + 2*cd.sum2((ref[:,2]-psi_pred[0:ref.shape[0]]))**2) + cd.sum1(self.control_variable**2)
         return f
     
 
