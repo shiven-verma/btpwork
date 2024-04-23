@@ -219,20 +219,10 @@ def _mmgder(var,dc):
     
     return der
 
-# X0 = [U0,0,0,0,0,0,0,17.95]
-# funcp = lambda t,x:_mmgder(t,x,-35)
-# funcs = lambda t,x:_mmgder(t,x,35)
-# Tmax = 160
-# tspan = [0,Tmax]
-# t_eval = np.arange(0,Tmax,0.01)
-
-
-# sol_port = solve_ivp(funcp,tspan,X0,t_eval=t_eval)
-# sol_stbd = solve_ivp(funcs,tspan,X0,t_eval=t_eval)
 
 def simulation(X0,control,t,flag):
     h = t[1]-t[0]
-    n = 2
+    n = 3
     
     i = 0
     xinit = X0.copy()

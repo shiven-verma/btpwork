@@ -16,11 +16,14 @@ class Serret_Frenet_Guidance:
         
 
     def guidance_command(self,stvar):
-        t = stvar[0]
-        psi = stvar[3]
+        # t = stvar[0]
+        # psi = stvar[3]
+        # p = np.array([[stvar[1]],[stvar[2]]])
+        # U = stvar[4]
+
+        t,px,py,psi,U = stvar[:]
+        p = np.array([[px],[py]])
         beta = 0
-        p = np.array([[stvar[1]],[stvar[2]]])
-        U = stvar[4]
         
         X = psi + beta
         
@@ -34,14 +37,12 @@ class Serret_Frenet_Guidance:
         
 
         Xr = atan(-e/self.delta)
-        # print(Xr)
         Upp = U*cos(X-Xt)+self.gamma*s
-        # print(Upp)
         t_dot = Upp/sqrt(xdd**2+ydd**2)
         
         Xd = Xt + Xr
         Ud = self.kappa*sqrt(self.delta**2+e**2)
-        Ud = 0.54
+        Ud = 0.51
         xd = pd[0][0]
         yd = pd[1][0]
 
@@ -76,10 +77,6 @@ class Agent():
         sol = np.zeros([3,n])
         SFG = Serret_Frenet_Guidance(spline)
         x,y,psi,u = initlist[[3,4,5,0]]
-        # x = initlist[3]
-        # y = initlist[4]
-        # psi = initlist[5]
-        # u = initlist[0]
         var0 = [t,x,y,psi,u]
         i = 0
         while i<n:
@@ -90,9 +87,7 @@ class Agent():
             psi,x,y = statenew[:]
             t = td*h + t
             var0 = [t,x,y,psi,Ud]
-            # print(var0)
             i+=1
-            # print("diff:",max(xspl)-t)
             if abs(t-max(xspl))<0.5:
                 sol = sol[:,:i]
                 break

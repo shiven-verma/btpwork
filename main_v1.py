@@ -127,7 +127,6 @@ while i<SimumlationWindow:
     refr = Xref[i:i+C.P,:]
     uoptd = C.nlpsolve(refr,xini,time)
     print(refr.shape,xini,time)
-    k
     uopt[i,:] = np.array(uoptd)[:,0]
     uoptm = uopt[i,:]
     uoptcont = uoptm[(tcontinuous//1).astype(int)]
