@@ -42,7 +42,7 @@ class Serret_Frenet_Guidance:
         
         Xd = Xt + Xr
         Ud = self.kappa*sqrt(self.delta**2+e**2)
-        Ud = 0.51
+        Ud = 0.5098
         xd = pd[0][0]
         yd = pd[1][0]
 

@@ -222,7 +222,7 @@ def _mmgder(var,dc):
 
 def simulation(X0,control,t,flag):
     h = t[1]-t[0]
-    n = 3
+    n = 4
     
     i = 0
     xinit = X0.copy()

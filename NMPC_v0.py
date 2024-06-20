@@ -8,12 +8,13 @@ from math import sin,cos,sqrt,pi,exp
 
               
 class controller():
-    def __init__(self,NP,NC,Q,obst_r):
+    def __init__(self,NP,NC,Q,obstacle):
         self.P = NP
         self.C = NC
         self.Q = Q
-        self.r = obst_r
-
+        self.obsx = obstacle[0]
+        self.obsy = obstacle[1]
+        self.r = obstacle[2]
 
 
     def prediction_model(self,states,control_inp,h):
@@ -45,7 +46,7 @@ class controller():
 
         return new_state
     
-    def cost(self,ref,X0,t,obs_pos): #X0 initial states , t =
+    def cost(self,ref,X0,t,obs_mov): #X0 initial states , t =
         h = t[1]-t[0] 
         self.control_variable = cd.SX.sym("control_variable",self.P)
         xinit = X0.copy()
@@ -60,7 +61,11 @@ class controller():
         psi_prediction = prediction[:,5]
 
 
-        [cx,cy] = obs_pos
+        obs_psi = 0.15
+        v = 0.4*0
+        [cx,cy] = obs_mov(self.obsx,self.obsy,obs_psi,v)
+        self.obsx = cx
+        self.obsy = cy
         r = self.r
         self.k = []
         self.g = []
@@ -80,28 +85,22 @@ class controller():
         return f
     
 
-    def nlpsolve(self,ref,X,t,obs_pos):
+    def nlpsolve(self,ref,X,t,obs_mov):
         X0 = X.copy()
         u0 = np.zeros(self.P)
         lbx = [-0.610]*self.P
         ubx = [0.610]*self.P
 
-        wli = [1/(i+1) for i in range(self.P)]
-        weight = cd.DM(wli[::-1])
 
-        
-        f = self.cost(ref,X0,t,obs_pos)
+        f = self.cost(ref,X0,t,obs_mov)
         g = self.g
         lbg = self.lbg
-        print(lbg,"----")
         ubg = [cd.inf,cd.inf,cd.inf]
-        # lbg = lbg*weight
-        # print(lbg)
 
         nlp = {"x":self.control_variable,"f":f, "g":g}
         solver = cd.nlpsol('solver','ipopt',nlp)
         solved = solver(x0 = u0,lbx = lbx,ubx=ubx,lbg=lbg)
-        # print(solved['x'])
+        print(solved['x'])
         return solved['x']
     
 
