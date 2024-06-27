@@ -1,7 +1,5 @@
 import numpy as np
 from math import sin, cos, pi, sqrt, exp
-import matplotlib.pyplot as plt
-from scipy.integrate import solve_ivp
 
 ######### Ship Parameters ##########
 ########## Table 1 ##########

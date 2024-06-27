@@ -1,7 +1,5 @@
 import numpy as np
 from math import cos,sin,sqrt,atan
-from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
 
 class Serret_Frenet_Guidance:
     def __init__(self,spline):

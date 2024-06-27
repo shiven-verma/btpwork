@@ -1,6 +1,5 @@
 
 ## Import Libraries
-from casadi import SX
 import numpy as np
 from math import sqrt,pi
 from scipy.interpolate import CubicSpline
@@ -41,7 +40,7 @@ class MainSimulation:
         time = np.linspace(0,self.T,self.T*path_step)
         A = Agent([self.x0,self.y0,self.psi0])
         Reference = A.simulation(self.spline,time,self.xspl,np.array(self.X0.copy()))
-        # print(self.spline,time.shape,self.xspl.shape,np.array(self.X0.copy()))
+
         self.Reference = Reference[:,::path_step]
         ReferenceWindow = self.Reference.shape[1]
         self.SimulationWindow = ReferenceWindow 
@@ -97,7 +96,6 @@ class MainSimulation:
             end_time = time.time()
 
             uoptimal = uopt[i,:] = np.array(optimized_control_input)[:,0]
-            # uoptimal_continuous = uoptimal[(tcontinuous//1).astype(int)]
 
             ## MMG simulation
             if i==self.SimulationWindow:

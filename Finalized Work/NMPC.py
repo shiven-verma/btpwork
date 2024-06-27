@@ -2,8 +2,6 @@
 
 import numpy as np
 import casadi as cd
-import matplotlib.pyplot as plt
-from scipy.interpolate import CubicSpline
 from math import sin,cos,sqrt,pi,exp
 
               
