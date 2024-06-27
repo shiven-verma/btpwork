@@ -1,5 +1,5 @@
 
-#import libraries
+## Import Libraries
 from casadi import SX
 import numpy as np
 from math import sqrt,pi
@@ -7,11 +7,10 @@ from scipy.interpolate import CubicSpline
 import matplotlib.pyplot as plt
 import time
 
-# import supporting functions
+## Import Supporting Functions
 from MMG3 import simulation
 from NMPC import controller
-from Guide import Serret_Frenet_Guidance,Agent
-
+from Guide import Agent
 
 class EnvironmentData():
     def __init__(self,data):
@@ -19,6 +18,7 @@ class EnvironmentData():
         self.ShipPositionArray = np.array([data[2],data[3]])
         self.Ref = data[4]
         self.OptTime = data[5]
+
 
 class MainSimulation:
     def __init__(self,xpoints,ypoints,initial_state,T,obstacle):
@@ -45,9 +45,6 @@ class MainSimulation:
         self.Reference = Reference[:,::path_step]
         ReferenceWindow = self.Reference.shape[1]
         self.SimulationWindow = ReferenceWindow 
-
-        if ReferenceWindow>400:
-            raise("error")
         
         
     def circle(self,obstacle_pos):
@@ -67,79 +64,70 @@ class MainSimulation:
         x = np.array(x0) + v*np.cos(psi)
         y = np.array(y0) + v*np.sin(psi)
         return [x,y]
-
+    
+    def CrossTrackError(self,Reference,Pose):
+        CTE = Pose[4]-Reference[0,1]
+        return CTE
 
     def RunTheShip(self,NC):
         self.SimulationDataDict = {}
         self.generate_reference()
-        
-        uopt = np.ones((self.SimulationWindow,NP))
-        ContMag = 1
-        tdiscrete = np.linspace(0,NP-1,NP)
-        tcontinuous = np.linspace(0,NP-1,NP*ContMag)
-        Xinit = self.X0.copy()
-        flag = 0
-        cte_list = []
+        EnvData = np.zeros([6,self.SimulationWindow])
         self.i_list = []
-        obs_dist_list = []
+        
+    
+        uopt = np.ones((self.SimulationWindow,NP))
+        
+        tcontinuous = np.linspace(0,NP-1,NP)
+        Xinit = self.X0
+        flag = 0
+
         i = 0
         j = 0
         v = 0.2
-        obs_list = []
-        ves_list = []
-        ref_list = []
-        time_list = []
         while i<self.SimulationWindow:
-            start_time = time.time()
-            obs_list.append([self.obsx[0],self.obsy[0]])
             obs_pos = self.obstacle_moves(self.obsx,self.obsy,np.pi,v)
             [self.obsx,self.obsy] = obs_pos[:]
             Refer = self.Reference.T[i:i+NP*NC:NC,:]
-            # print(Refer.shape)
-            ref_list.append([Refer[0,0],Refer[0,1]])
+
+            ## Optimization and Calculating Time
+            start_time = 0
+            start_time = time.time()
             optimized_control_input = C.nlpsolve(Refer,Xinit,tcontinuous,obs_pos)
-            # print(optimized_control_input)
+            end_time = time.time()
+
             uoptimal = uopt[i,:] = np.array(optimized_control_input)[:,0]
-            uoptimal_continuous = uoptimal[(tcontinuous//1).astype(int)]
-            if i==self.SimulationWindow-1+1:
+            # uoptimal_continuous = uoptimal[(tcontinuous//1).astype(int)]
+
+            ## MMG simulation
+            if i==self.SimulationWindow:
                 flag = 1
-            predicted_steps = simulation(Xinit,uoptimal_continuous,tcontinuous,flag)
+            predicted_steps = simulation(Xinit,uoptimal,tcontinuous,flag)
+
+
             variable = f"pred_{i}"
             self.SimulationDataDict[variable] = predicted_steps
-            Xinit[:] = predicted_steps[:,1*NC*ContMag]
-            CTE = abs(Xinit[4]-Refer[0,1])
-            
-            obs_dist = (np.array(obstacle[0])-Xinit[3])**2 + (np.array(obstacle[1])-Xinit[4])**2
+            Xinit[:] = predicted_steps[:,NC]
+
+
+            ## Dynamic NC Condition
+            CTE = self.CrossTrackError(Refer,Xinit)
+            obs_dist = (self.obsx[0]-Xinit[3])**2 + (self.obsy[0]-Xinit[4])**2
             if (CTE*NP*2>obs_dist).any() or CTE>2:
                 NC = 1
                 j+=1
-                # raise("Error")
             else:
                 NC = 1
-            
-            ves_list.append([Xinit[3],Xinit[4]])
-            cte_list.append(CTE)
-            obs_dist_list.append(obs_dist[0])
+            optime = end_time-start_time
+            templist = [self.obsx[0],self.obsy[0],Xinit[3],Xinit[4],Refer[0,1],optime]
+            # print(self.obsx[0])
+            EnvData[:,i] = templist[:]
             self.i_list.append(i)
-            end_time = time.time()
-            time_list.append(-start_time+end_time)
-
             print(i,"iter out of", self.SimulationWindow-1,"--",j)
             i = i+1*NC
-        # print(max(cte_list))
-        file_name = "obs_save.csv"
-        obs_ar = np.array(obs_list)
-        ves_ar = np.array(ves_list)
-        ref_ar = np.array(ref_list)
-        # print(self.Reference[0,:].shape[:])
-        print(max(time_list))
-        # data = [np.array([i[0] for i in obs_list]),np.array([i[1] for i in obs_list]),np.array([i[0] for i in ves_list]),np.array([i[1] for i in ves_list])]
-        # print(obs_ar[:,0])
-        data = [ves_ar[:,0],ves_ar[:,1],obs_ar[:,0],obs_ar[:,1]]
-        np.savetxt(file_name, data, delimiter=',')
-        plt.plot(self.i_list,cte_list)
-
-
+        Env = EnvironmentData(EnvData)
+        return Env
+    
     def Visualiser(self):
         plt.figure(figsize=(16,12))
         plt.plot(self.xspl,self.yspl,"--",label="reference")
@@ -159,16 +147,12 @@ class MainSimulation:
 
 
 
+
+
 if __name__ == "__main__":
-    # xspl = np.array([0,5,9,17,27,39,53,64,74,86,100])
-    # yspl = np.array([-1,0.5,1.2,2.3,3.0,3.6,5.2,4.3,3.9,3.0,2.4])
+
     xspl = np.array([0,4,10,18,29,40,57,64,75,87,97])
     yspl = np.array([2,1.3,0.8,1.3,2.0,2.8,4.2,4.8,5.3,6.0,5.4])
-
-    # x0 = -5
-    # y0 = 2.5
-    # psi0 = 0.0
-    # U0 = 0.5
 
     x0 = -4
     y0 = -1.5
@@ -182,14 +166,15 @@ if __name__ == "__main__":
     NP = 45
     NC = 1
     Q = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])
+
     #obstacle [x,y,r]
-    # obstacle = [[35,74],[2.5,4],[1.5,2.5]]
     obstacle = [[74],[4.3],[1.5]]
     C = controller(NP,NC,Q,obstacle[2])
 
     main = MainSimulation(xspl,yspl,initial_state,T,obstacle)
-    main.RunTheShip(NC)
+    env = main.RunTheShip(NC)
     main.Visualiser()
     main.circle(obstacle)
+    print(max(env.OptTime))
     # plt.savefig("OP30C2.png", bbox_inches='tight', pad_inches=0)
     plt.show()
